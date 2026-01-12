@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emartdb
+  namespace: emart-app
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emartdb
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: emartdb
+    spec:
+      terminationGracePeriodSeconds: 120
+      restartPolicy: Always
+      containers:
+      - name: emartdb-container
+        resources:
+          requests:
+            cpu: "0.6"
+            memory: "400Mi"
+          limits:
+            cpu: "0.6"
+            memory: "400Mi"
+        image: mysql:5.7
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: emart-secret
+              key: emartdb-pass
+        - name: MYSQL_DATABASE
+          value: books
+        ports:
+        - containerPort: 3306
+          name: emartdb-port
+        readinessProbe:
+          tcpSocket:
+            port: emartdb-port
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 5
+        livenessProbe:
+          tcpSocket:
+            port: emartdb-port
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 10
+        startupProbe:
+          tcpSocket:
+            port: emartdb-port
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        emptyDir: {}
+
+        #volumeMounts:
+        #- name: emartdb-storage
+        #  mountPath: /var/lib/mysql
+  #volumeClaimTemplates:
+  #- metadata:
+  #    name: emartdb-storage
+  #  spec:
+  #    accessModes: [ "ReadWriteOnce" ]
+      #storageClassName: "my-storage-class"
+  #    resources:
+  #      requests:
+  #        storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emartdb
+  namespace: emart-app
+spec:
+  selector:
+    app: emartdb
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: emartdb-port
