@@ -4,7 +4,7 @@ metadata:
   name: client-deploy
   namespace: emart-app
   annotations:
-    argocd.argoproj.io/hook: Sync
+    # argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 1
