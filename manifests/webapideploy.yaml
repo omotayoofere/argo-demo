@@ -55,9 +55,9 @@ spec:
         startupProbe:
           tcpSocket:
             port: webapi-port
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 12
 
 ---
 apiVersion: v1
